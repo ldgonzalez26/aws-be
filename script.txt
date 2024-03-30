@@ -1,0 +1,2 @@
+aws dynamodb put-item --table-name products --item '{"id":{"N":"2   "},"text":{"S":"second item"}, "description":{"S":"Just an example item"}, "price":{"N":"8"} }'
+aws dynamodb put-item --table-name stock --item '{"id":{"N":"1"},"count":{"N":"5"} }'

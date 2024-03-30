@@ -22,10 +22,18 @@ frameworkVersion: '3'
 
 provider:
   name: aws
-  runtime: nodejs18.x
+  runtime: nodejs16.x
   stage: dev
   region: us-east-1
   profile: serverlessUser
+  environment:
+    productsTableName: products
+    stockTableName: stock
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - dynamoDb:*
+      Resource: '*'
 
 # you can overwrite defaults here
 #  stage: dev
@@ -67,7 +75,7 @@ functions:
     events:
       - http:
           path: products
-          method: GET
+          method: get
           cors: true
 #    The following are a few example events you can configure
 #    NOTE: Please make sure to change your handler code to work with those events
