@@ -8,13 +8,13 @@ module.exports.handler = async (event) => {
     console.log('token', token);
     console.log('methodArn', methodArn);
     if (!token) {
-      throw new Error('Unauthorized');
+      return generateUnauthorizedResponse();
     }
 
     const [type, credentials] = event.authorizationToken.split(' ');
 
     if (type !== 'Basic') {
-      throw new Error('Unauthorized');
+      return generateUnauthorizedResponse();
     }
 
     const buff = Buffer.from(credentials, 'base64');
@@ -28,9 +28,25 @@ module.exports.handler = async (event) => {
     const effect = storedUserPassword !== password ? 'Deny' : 'Allow';
     return generateAuthResponse(credentials, effect, methodArn);
   } catch (error) {
-    throw new Error('Internal server error');
+    return generateForbiddenResponse();
   }
 };
+
+// Function to generate 401 Unauthorized response
+function generateUnauthorizedResponse() {
+  return {
+    statusCode: 401,
+    body: JSON.stringify({ message: 'Unauthorized' }),
+  };
+}
+
+// Function to generate 403 Forbidden response
+function generateForbiddenResponse() {
+  return {
+    statusCode: 403,
+    body: JSON.stringify({ message: 'Forbidden' }),
+  };
+}
 
 function generateAuthResponse(principalId, effect, methodArn) {
   const policyDocument = generatePolicyDocument(effect, methodArn);
