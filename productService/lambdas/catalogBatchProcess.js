@@ -5,41 +5,67 @@ const dynamoDB = new AWS.DynamoDB.DocumentClient();
 const sns = new AWS.SNS();
 
 module.exports.handler = async (event) => {
-  const putRequests = event.Records.map((record) => {
+  const items = event.Records.map((record) => {
     if (record && record.body) {
-      const product = JSON.parse(record.body);
-
-      const productId = uuidv4();
-
-      return {
-        PutRequest: {
-          Item: {
-            id: productId,
-            title: product.title,
-            description: product.description,
-            price: product.price,
-            count: product.count,
+      const products = JSON.parse(record.body);
+      const productItems = products.map((product) => {
+        const productId = uuidv4();
+        return {
+          PutRequest: {
+            Item: {
+              id: productId,
+              title: product.title,
+              description: product.description,
+              price: product.price,
+              count: product.count,
+            },
           },
-        },
-      };
-    }
-  });
+        };
+      });
 
-  if (!putRequests || !putRequests.length) {
+      return productItems;
+    }
+  }).flat();
+
+  if (!items || !items.length) {
     console.log('No items to process');
     return;
   }
 
+  const productParamsItems = items.map((item) => {
+    const { PutRequest } = item;
+    const { Item } = PutRequest;
+    const { count, ...rest } = Item;
+    return { PutRequest: { Item: rest } };
+  });
+
+  const countItems = items.map((item) => {
+    const { Item } = item.PutRequest;
+    return {
+      PutRequest: {
+        Item: {
+          count: Item.count,
+          product_id: Item.id,
+        },
+      },
+    };
+  });
+
   try {
-    const params = {
+    const productParams = {
       RequestItems: {
-        [process.env.productsTableName]: putRequests,
+        [process.env.productsTableName]: productParamsItems,
+      },
+    };
+    const stockParams = {
+      RequestItems: {
+        [process.env.stockTableName]: countItems,
       },
     };
 
-    await dynamoDB.batchWrite(params).promise();
-
-    const message = `Successfully created ${putRequests.length} products`;
+    await dynamoDB.batchWrite(productParams).promise();
+    await dynamoDB.batchWrite(stockParams).promise();
+    const message = `Successfully created ${items.length} products`;
     const snsParams = {
       Subject: 'Product Creation',
       Message: message,

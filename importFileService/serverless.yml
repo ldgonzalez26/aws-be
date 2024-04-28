@@ -42,7 +42,7 @@ provider:
 #  region: us-east-1
 
 functions:
-  importFileParserHandler:
+  importProducts:
     handler: lambdas/importProductsFile.handler
     events:
       - s3:
@@ -50,7 +50,7 @@ functions:
           event: s3:ObjectCreated:*
           rules:
             - prefix: 'uploaded/'
-  importProducts:
+  importFileParserHandler:
     handler: lambdas/importFileParser.handler
     events:
       - http:

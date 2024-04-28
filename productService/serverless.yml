@@ -29,7 +29,7 @@ provider:
   environment:
     productsTableName: products
     stockTableName: stock
-    topicArn: 'arn:aws:sns:us-east-1:890188306865:productservice-dev-createProductTopic-zu8qKFNu9bXx'
+    topicArn: 'arn:aws:sns:us-east-1:890188306865:productservice-dev-createProductTopic-PxlYusVoA58V'
   iamRoleStatements:
     - Effect: Allow
       Action:
