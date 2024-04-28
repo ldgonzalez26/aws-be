@@ -11,7 +11,7 @@
 #
 # Happy Coding!
 
-service: getproductservice
+service: productservice
 # app and org for use with dashboard.serverless.com
 #app: your-app-name
 #org: your-org-name
@@ -29,11 +29,29 @@ provider:
   environment:
     productsTableName: products
     stockTableName: stock
+    topicArn: 'arn:aws:sns:us-east-1:890188306865:productservice-dev-createProductTopic-PxlYusVoA58V'
   iamRoleStatements:
     - Effect: Allow
       Action:
         - dynamoDb:*
       Resource: '*'
+
+    - Effect: Allow
+      Action:
+        - 'sns:Publish'
+      Resource:
+        - ${self:provider.environment.topicArn}
+
+    - Effect: Allow
+      Action:
+        - 'sqs:SendMessage'
+        - 'sqs:ReceiveMessage'
+        - 'sqs:DeleteMessage'
+        - 'sqs:GetQueueUrl'
+      Resource:
+        - Fn::GetAtt:
+            - catalogItemsQueue
+            - Arn
 
 # you can overwrite defaults here
 #  stage: dev
@@ -70,13 +88,36 @@ provider:
 #    - include-me-dir/**
 
 functions:
+  getProducts:
+    handler: lambdas/getProductsList.handler
+    events:
+      - http:
+          path: products
+          method: get
+          cors: true
+  createProduct:
+    handler: lambdas/createProduct.handler
+    events:
+      - http:
+          path: products
+          method: post
+          cors: true
   getProduct:
-    handler: handler.getProductsById
+    handler: lambdas/getProductById.handler
     events:
       - http:
           path: products/{productId}
           method: get
           cors: true
+  catalogBatchProcess:
+    handler: lambdas/catalogBatchProcess.handler
+    events:
+      - sqs:
+          arn:
+            Fn::GetAtt:
+              - catalogItemsQueue
+              - Arn
+          batchSize: 5
 #    The following are a few example events you can configure
 #    NOTE: Please make sure to change your handler code to work with those events
 #    Check the event documentation for details
@@ -118,12 +159,25 @@ functions:
 #      variable2: value2
 
 # you can add CloudFormation resource templates here
-#resources:
-#  Resources:
-#    NewResource:
-#      Type: AWS::S3::Bucket
-#      Properties:
-#        BucketName: my-new-bucket
+resources:
+  Resources:
+    catalogItemsQueue:
+      Type: 'AWS::SQS::Queue'
+      Properties:
+        QueueName: catalogItemsQueue
+
+    createProductTopic:
+      Type: 'AWS::SNS::Topic'
+      Properties:
+        DisplayName: 'Create Product Topic'
+
+    createProductSubscription:
+      Type: 'AWS::SNS::Subscription'
+      Properties:
+        Protocol: 'email'
+        TopicArn:
+          Ref: 'createProductTopic'
+        Endpoint: 'ldgonzalezmedina@gmail.com'
 #  Outputs:
 #     NewOutput:
 #       Description: "Description for the output"
