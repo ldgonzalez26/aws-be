@@ -1,11 +1,11 @@
 'use strict';
 
-const Responses = require('./utils/API_Responses');
-const Dynamo = require('./utils/Dynamo');
+const Responses = require('../utils/API_Responses');
+const Dynamo = require('../utils/Dynamo');
 const productsTableName = process.env.productsTableName;
 const stockTableName = process.env.stockTableName;
 
-module.exports.getProductsById = async (event) => {
+module.exports.handler = async (event) => {
   if (!event.pathParameters || !event.pathParameters.productId) {
     return Responses._400({ message: 'missing ID from the path' });
   }
