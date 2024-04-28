@@ -1,10 +1,11 @@
 'use strict';
-const Responses = require('./utils/API_Responses');
-const Dynamo = require('./utils/Dynamo');
+
+const Responses = require('../utils/API_Responses');
+const Dynamo = require('../utils/Dynamo');
 const productsTableName = process.env.productsTableName;
 const stockTableName = process.env.stockTableName;
 
-module.exports.getProductsList = async (event) => {
+module.exports.handler = async () => {
   const products = await Dynamo.scan(productsTableName).catch((err) => {
     console.log(err, 'error in dynamo getProducts');
     return null;

@@ -1,17 +1,12 @@
 'use strict';
 
-const Responses = require('./utils/API_Responses');
-const Dynamo = require('./utils/Dynamo');
+const Responses = require('../utils/API_Responses');
+const Dynamo = require('../utils/Dynamo');
 const productsTableName = process.env.productsTableName;
 const stockTableName = process.env.stockTableName;
 
-//should be implemented for extra points
-//research transactions for extra points
-
-const validateData = (product) => {};
-module.exports.createProduct = async (event) => {
+module.exports.handler = async (event) => {
   const product = event.body;
-  console.log(event.body);
   const item = await Dynamo.getItem(product.id, productsTableName).catch((err) => {
     console.log(err, 'error in dynamo getProductById');
     return null;

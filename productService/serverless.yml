@@ -11,7 +11,7 @@
 #
 # Happy Coding!
 
-service: getproductservice
+service: productservice
 # app and org for use with dashboard.serverless.com
 #app: your-app-name
 #org: your-org-name
@@ -70,8 +70,22 @@ provider:
 #    - include-me-dir/**
 
 functions:
+  getProducts:
+    handler: lambdas/getProductsList.handler
+    events:
+      - http:
+          path: products
+          method: get
+          cors: true
+  createProduct:
+    handler: lambdas/createProduct.handler
+    events:
+      - http:
+          path: products
+          method: post
+          cors: true
   getProduct:
-    handler: handler.getProductsById
+    handler: lambdas/getProductById.handler
     events:
       - http:
           path: products/{productId}
