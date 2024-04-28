@@ -1,6 +1,8 @@
 const AWS = require('aws-sdk');
 const csvParse = require('csv-parse');
 const s3 = new AWS.S3();
+const { once } = require('events');
+const sqs = new AWS.SQS();
 
 module.exports.handler = async (event) => {
   try {
@@ -21,35 +23,24 @@ module.exports.handler = async (event) => {
     // Retrieve the object from S3
     const s3Object = await s3.getObject({ Bucket: bucketName, Key: objectKey }).promise();
 
-    // Parse the CSV file using csv-parser
     s3Object
-      .on('error', (err) => {
-        console.log('Error in S3 Stream:', err);
-      })
+      .createReadStream()
       .pipe(csvParse())
-      .on('data', (data) => {
-        // handle data
-        console.log(data);
+      .on('data', async (data) => {
+        try {
+          const params = {
+            MessageBody: JSON.stringify(data),
+            QueueUrl: 'https://sqs.us-east-1.amazonaws.com/890188306865/catalogItemsQueue',
+          };
+          await sqs.sendMessage(params).promise();
+        } catch (error) {
+          console.error('Error sending message to SQS:', error);
+        }
       })
       .on('error', (err) => {
         console.log('Error in CSV Parser:', err);
       })
       .on('end', () => {
-        console.log('Finished processing');
-      });
-    const csvRecords = [];
-    s3Object
-      .createReadStream()
-      .pipe(csv())
-      .on('data', (data) => {
-        csvRecords.push(data);
-        console.log(data);
-      })
-      .on('end', () => {
-        // Log each record to CloudWatch
-        csvRecords.forEach((record, index) => {
-          console.log(`Record ${index + 1}:`, record);
-        });
         console.log('Finished');
       });
     // wait for the s3Object upload to finish
