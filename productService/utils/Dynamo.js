@@ -55,6 +55,40 @@ const Dynamo = {
 
     return data.Items;
   },
+  async writeProduct(data, TableName) {
+    if (!data.id) {
+      throw Error('No id on data');
+    }
+    const params = {
+      TableName,
+      Item: data,
+    };
+
+    const res = await documentClient.put(params).promise();
+
+    if (!res) {
+      throw Error(`there was an error inserting ${data.id} into table ${TableName}`);
+    }
+
+    return data;
+  },
+  async writeStock(data, TableName) {
+    if (!data.product_id) {
+      throw Error('No id on data');
+    }
+    const params = {
+      TableName,
+      Item: data,
+    };
+
+    const res = await documentClient.put(params).promise();
+
+    if (!res) {
+      throw Error(`there was an error inserting ${data.id} into table ${TableName}`);
+    }
+
+    return data;
+  },
 };
 
 module.exports = Dynamo;
