@@ -11,7 +11,7 @@
 #
 # Happy Coding!
 
-service: getproductservice
+service: authorizationservice
 # app and org for use with dashboard.serverless.com
 #app: your-app-name
 #org: your-org-name
@@ -20,21 +20,20 @@ service: getproductservice
 # Check out our docs for more details
 frameworkVersion: '3'
 
+useDotenv: true
+
 provider:
   name: aws
   runtime: nodejs16.x
   stage: dev
   region: us-east-1
   profile: serverlessUser
-  environment:
-    productsTableName: products
-    stockTableName: stock
-  iamRoleStatements:
-    - Effect: Allow
-      Action:
-        - dynamoDb:*
-      Resource: '*'
 
+functions:
+  basicAuthorizer:
+    handler: lambdas/basicAuthorizer.handler
+    environment:
+      GITHUB_ACCOUNT_LOGIN: ${env:ldgonzalezmedina26}
 # you can overwrite defaults here
 #  stage: dev
 #  region: us-east-1
@@ -68,15 +67,6 @@ provider:
 #    - '!exclude-me-dir/**'
 #    - include-me.js
 #    - include-me-dir/**
-
-functions:
-  getProduct:
-    handler: handler.getProductsById
-    events:
-      - http:
-          path: products/{productId}
-          method: get
-          cors: true
 #    The following are a few example events you can configure
 #    NOTE: Please make sure to change your handler code to work with those events
 #    Check the event documentation for details
